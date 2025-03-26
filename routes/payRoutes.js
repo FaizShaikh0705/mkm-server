@@ -23,8 +23,8 @@ import axios from 'axios';
 // });
 
 const razorpay = new Razorpay({
-key_id: 'rzp_test_5Cals1cn7FB5ME',
-key_secret: 'mzASirpjDMwgWZyVM6pvW4Kf',
+key_id: 'rzp_test_VQfmQIrPReEgQm',
+key_secret: '5EBwJ6UWdQqmEi4idcpYzg3n',
 });
 //CREATE
 
@@ -142,11 +142,11 @@ const calcGst = (gstPercnt,totPric) => {
 router.post("/", verifyToken,async (req, res) => {
 
     const qNew = req.body;
-    // const apiKey = 'rzp_test_5Cals1cn7FB5ME';
-    // const apiSecret = 'mzASirpjDMwgWZyVM6pvW4Kf';
+    // const apiKey = 'rzp_test_VQfmQIrPReEgQm';
+    // const apiSecret = '5EBwJ6UWdQqmEi4idcpYzg3n';
 
-    const apiKey = 'rzp_live_Z2ygAX91qci4VB';
-    const apiSecret = 'SoKwxgfYxthb83b5FlURuzbm';
+    const apiKey = 'rzp_test_VQfmQIrPReEgQm';
+    const apiSecret = '5EBwJ6UWdQqmEi4idcpYzg3n';
     // console.log(qNew);
     var line_items = [];
     var ord_items = [];
@@ -211,8 +211,13 @@ router.post("/", verifyToken,async (req, res) => {
       // console.log("here--------",dbObj.gstNumber * (prPric /100));
 
       if(itmTax){
-        totalTax += itmTax;                
-        itmDesc = itmDesc+" + GST Rs."+parseInt(itmTax);
+        totalTax += itmTax;
+        // console.log((qNew.shippingAddress.shippingpostalCode).startsWith('400'));
+        if((qNew.shippingAddress.shippingpostalCode).startsWith('400')){
+          itmDesc = itmDesc+"+\nCGST Rs."+Math.round(parseInt(itmTax)/2) + " + SGST Rs. " +  Math.round(parseInt(itmTax)/2);
+        }else{
+          itmDesc = itmDesc+" + IGST Rs."+parseInt(itmTax);
+        }
       }
 
       if(itemCupnDisc[dbObj.postTopicName] || itemCupnDisc["all"]){
