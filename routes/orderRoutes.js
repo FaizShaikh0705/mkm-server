@@ -1,6 +1,7 @@
 import express from 'express'
 const router = express.Router()
 import Order from '../models/orderModel.js';
+import { Product } from '../models/productModel.js'
 // import User from "../models/userModel.js";
 
 import {
@@ -43,8 +44,47 @@ import {
 router.post("/", verifyToken, async (req, res) => {
     var orderData = req.body;
     const count = await Order.countDocuments();
-    orderData["orderId"] = (count+1).toString().padStart(6, '0');
+    orderData["orderId"] = (count + 1).toString().padStart(6, '0');
     const newOrder = new Order(orderData);
+
+    const products = orderData?.products;
+
+
+    if (Array.isArray(products)) {
+        for (let i = 0; i < products.length; i++) {
+            const productId = products[i].productId;
+            const quantityOrdered = parseInt(products[i].quantity);
+
+            if (isNaN(quantityOrdered)) {
+                console.warn(`Invalid quantity for product ${productId}`);
+                continue;
+            }
+
+            const product = await Product.findById(productId);
+
+            if (!product) {
+                console.warn(`Product with ID ${productId} not found`);
+                continue;
+            }
+
+            const newStock = product.stock - quantityOrdered;
+
+            if (newStock < 0) {
+                console.warn(`Stock too low for product ${productId}. Skipping...`);
+                continue;
+            }
+
+            await Product.findByIdAndUpdate(
+                productId,
+                { $inc: { stock: -quantityOrdered } },
+                { new: true }
+            );
+        }
+    } else {
+        console.warn("No products found or not an array");
+    }
+
+
 
     try {
         const savedOrder = await newOrder.save();
